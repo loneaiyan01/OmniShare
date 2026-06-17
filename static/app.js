@@ -109,6 +109,23 @@ async function checkAuth() {
         }
     } catch { /* fall through to show modal */ }
 
+    // If not authenticated, check location hash for auto-login
+    const hash = window.location.hash;
+    const pinMatch = hash.match(/#pin=(\d{4})/);
+    if (pinMatch && pinMatch[1]) {
+        const pin = pinMatch[1];
+        // Clear hash so it doesn't stay in the URL bar
+        window.location.hash = "";
+        
+        // Auto-submit PIN
+        for (let i = 0; i < 4; i++) {
+            pinDigits[i].value = pin[i];
+        }
+        showToast("Auto-connecting via QR link…", "info");
+        submitPin();
+        return;
+    }
+
     authModal.classList.remove("hidden");
     appEl.classList.add("hidden");
     pinDigits[0].focus();
@@ -793,3 +810,160 @@ function initApp() {
 
 // Entry point
 checkAuth();
+
+/* ═══════════════════════════════════════════════════════════════
+   CAMERA SCANNER MODULE & MOBILE DETECTION
+   ═══════════════════════════════════════════════════════════════ */
+const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 860;
+
+// Toggle header and login buttons depending on mobile/PC
+const btnToggleQr = document.getElementById("btn-toggle-qr");
+const btnScanCamera = document.getElementById("btn-scan-camera");
+const btnScanLogin = document.getElementById("btn-scan-login");
+
+if (isMobile) {
+    if (btnToggleQr) btnToggleQr.classList.add("hidden");
+    if (btnScanCamera) btnScanCamera.classList.remove("hidden");
+    if (btnScanLogin) btnScanLogin.classList.remove("hidden");
+} else {
+    if (btnToggleQr) btnToggleQr.classList.remove("hidden");
+    if (btnScanCamera) btnScanCamera.classList.add("hidden");
+    if (btnScanLogin) btnScanLogin.classList.add("hidden");
+}
+
+const scannerPanel = document.getElementById("scanner-panel");
+const scannerBackdrop = document.getElementById("scanner-backdrop");
+const scannerClose = document.getElementById("scanner-close");
+const scannerVideo = document.getElementById("scanner-video");
+const scannerStatus = document.getElementById("scanner-status");
+
+let cameraStream = null;
+let scannerActive = false;
+let scannerCallback = null;
+
+function startScanner(onScanned) {
+    scannerCallback = onScanned;
+    scannerPanel.classList.add("active");
+    scannerBackdrop.classList.add("active");
+    scannerStatus.textContent = "Requesting camera permission…";
+    scannerActive = true;
+
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
+        .then(stream => {
+            cameraStream = stream;
+            scannerVideo.srcObject = stream;
+            scannerVideo.setAttribute("playsinline", true);
+            scannerVideo.play();
+            scannerStatus.textContent = "Align QR code inside target box";
+            requestAnimationFrame(scanFrame);
+        })
+        .catch(err => {
+            console.error("Camera access failed:", err);
+            scannerStatus.textContent = "Camera access denied or unavailable";
+            showToast("Could not access camera", "error");
+        });
+}
+
+function stopScanner() {
+    scannerActive = false;
+    scannerPanel.classList.remove("active");
+    scannerBackdrop.classList.remove("active");
+    
+    if (cameraStream) {
+        cameraStream.getTracks().forEach(track => track.stop());
+        cameraStream = null;
+    }
+    scannerVideo.srcObject = null;
+}
+
+const scanCanvas = document.createElement("canvas");
+const scanCtx = scanCanvas.getContext("2d");
+
+function scanFrame() {
+    if (!scannerActive) return;
+
+    if (scannerVideo.readyState === scannerVideo.HAVE_ENOUGH_DATA) {
+        scanCanvas.width = scannerVideo.videoWidth;
+        scanCanvas.height = scannerVideo.videoHeight;
+        scanCtx.drawImage(scannerVideo, 0, 0, scanCanvas.width, scanCanvas.height);
+        const imageData = scanCtx.getImageData(0, 0, scanCanvas.width, scanCanvas.height);
+
+        let decoded = null;
+        try {
+            decoded = jsQR(imageData.data, imageData.width, imageData.height, {
+                inversionAttempts: "dontInvert",
+            });
+        } catch (e) {
+            // Ignore decoding errors
+        }
+
+        if (decoded && decoded.data) {
+            const result = decoded.data.trim();
+            console.log("Scanned QR Code:", result);
+            stopScanner();
+            if (scannerCallback) {
+                scannerCallback(result);
+            }
+            return;
+        }
+    }
+    requestAnimationFrame(scanFrame);
+}
+
+if (scannerClose) {
+    scannerClose.addEventListener("click", stopScanner);
+}
+if (scannerBackdrop) {
+    scannerBackdrop.addEventListener("click", stopScanner);
+}
+
+// Wire up Scan PC QR Code (Login)
+if (btnScanLogin) {
+    btnScanLogin.addEventListener("click", () => {
+        startScanner((scannedText) => {
+            let pin = "";
+            const hashMatch = scannedText.match(/#pin=(\d{4})/);
+            const queryMatch = scannedText.match(/[?&]pin=(\d{4})/);
+            const directMatch = scannedText.match(/^\d{4}$/);
+
+            if (hashMatch) pin = hashMatch[1];
+            else if (queryMatch) pin = queryMatch[1];
+            else if (directMatch) pin = directMatch[0];
+
+            if (pin && pin.length === 4) {
+                // Populate PIN digits
+                for (let i = 0; i < 4; i++) {
+                    pinDigits[i].value = pin[i];
+                }
+                showToast("PIN auto-detected from QR!", "success");
+                submitPin();
+            } else {
+                showToast("QR code does not contain a valid PIN", "error");
+            }
+        });
+    });
+}
+
+// Wire up Scan QR Code in App Header
+if (btnScanCamera) {
+    btnScanCamera.addEventListener("click", () => {
+        startScanner((scannedText) => {
+            clipboardTextarea.value = scannedText;
+            showClipboardEditor();
+            
+            if (wsManager) {
+                wsManager.send({ type: "clipboard_update", text: scannedText });
+                showToast("Scanned & synced to devices!", "success");
+            } else {
+                fetch("/api/clipboard", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ text: scannedText }),
+                }).then(r => {
+                    if (r.ok) showToast("Scanned & synced to devices!", "success");
+                    else showToast("Failed to sync scanned QR", "error");
+                }).catch(() => showToast("Failed to sync scanned QR", "error"));
+            }
+        });
+    });
+}

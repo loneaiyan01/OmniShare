@@ -263,7 +263,7 @@ async def network_info(request: Request):
 @app.get("/api/qr")
 async def qr_code_endpoint(request: Request):
     require_auth(request)
-    url = f"https://{LOCAL_IP}:{PORT}"
+    url = f"https://{LOCAL_IP}:{PORT}/#pin={PIN}"
     img = qrcode.make(url)
     buf = BytesIO()
     img.save(buf, format="PNG")

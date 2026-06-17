@@ -1089,3 +1089,109 @@ body::after {
     overflow-y: auto;
 }
 
+/* ─── Scanner Panel ───────────────────────────────────────────── */
+.scanner-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 120;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    display: none;
+    animation: fadeIn 0.3s ease;
+}
+.scanner-backdrop.active { display: block; }
+
+.scanner-panel {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.9);
+    z-index: 130;
+    width: 90%;
+    max-width: 400px;
+    padding: 30px 20px;
+    text-align: center;
+    display: none;
+    flex-direction: column;
+    animation: scaleIn 0.35s cubic-bezier(.4, 0, .2, 1);
+}
+.scanner-panel.active {
+    display: flex;
+    transform: translate(-50%, -50%) scale(1);
+}
+
+.scanner-close {
+    position: absolute;
+    top: 12px;
+    right: 16px;
+    background: none;
+    border: none;
+    color: var(--text-tertiary);
+    font-size: 1.4rem;
+    cursor: pointer;
+    transition: color var(--transition-fast);
+    line-height: 1;
+}
+.scanner-close:hover { color: var(--text-primary); }
+
+.scanner-title {
+    font-family: var(--font-display);
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+.scanner-subtitle {
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+    margin-bottom: 20px;
+}
+
+.scanner-video-wrapper {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    background: #000;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    margin-bottom: 16px;
+    border: 1px solid var(--border-subtle);
+}
+
+#scanner-video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.scanner-target-box {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 60%;
+    height: 60%;
+    border: 2px dashed var(--color-cyan);
+    border-radius: var(--radius-md);
+    box-shadow: 0 0 20px rgba(0, 210, 255, 0.2), inset 0 0 20px rgba(0, 210, 255, 0.2);
+    animation: scannerPulse 2s infinite ease-in-out;
+    pointer-events: none;
+}
+
+.scanner-status {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+@keyframes scannerPulse {
+    0%, 100% {
+        border-color: var(--color-cyan);
+        box-shadow: 0 0 15px rgba(0, 210, 255, 0.2), inset 0 0 15px rgba(0, 210, 255, 0.2);
+    }
+    50% {
+        border-color: var(--color-violet);
+        box-shadow: 0 0 30px rgba(160, 100, 255, 0.4), inset 0 0 30px rgba(160, 100, 255, 0.4);
+    }
+}
+
+

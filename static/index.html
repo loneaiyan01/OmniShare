@@ -9,6 +9,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/style.css">
+    <script src="/jsqr.js"></script>
 </head>
 <body>
 
@@ -26,6 +27,10 @@
             </div>
             <p id="auth-error" class="auth-error"></p>
             <button id="auth-submit" class="btn btn-primary btn-glow">Connect</button>
+            <button id="btn-scan-login" class="btn btn-secondary hidden" style="margin-top: 12px; width: 100%; justify-content: center;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                Scan PC QR Code
+            </button>
         </div>
     </div>
 
@@ -49,6 +54,9 @@
             <div class="header-right">
                 <button class="btn-icon-only" id="btn-toggle-qr" title="Show QR code for pairing">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="3" height="3"/><line x1="21" y1="14" x2="21" y2="14.01"/><line x1="21" y1="21" x2="21" y2="21.01"/><line x1="17" y1="21" x2="17" y2="21.01"/><line x1="21" y1="17" x2="21" y2="17.01"/></svg>
+                </button>
+                <button class="btn-icon-only hidden" id="btn-scan-camera" title="Scan QR code with camera">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
                 </button>
                 <div class="network-badge glass-pill" id="network-badge">
                     <span class="network-icon">🌐</span>
@@ -178,6 +186,19 @@
             </div>
         </aside>
         <div class="history-backdrop" id="history-backdrop"></div>
+
+        <!-- ──── Camera Scanner Panel (toggleable) ──── -->
+        <aside class="scanner-panel glass-card" id="scanner-panel">
+            <button class="scanner-close" id="scanner-close" title="Close">&times;</button>
+            <h3 class="scanner-title">Scan QR Code</h3>
+            <p class="scanner-subtitle">Point your camera at a QR code</p>
+            <div class="scanner-video-wrapper">
+                <video id="scanner-video" playsinline></video>
+                <div class="scanner-target-box"></div>
+            </div>
+            <p id="scanner-status" class="scanner-status">Starting camera…</p>
+        </aside>
+        <div class="scanner-backdrop" id="scanner-backdrop"></div>
     </div>
 
     <!-- ──── Toast Container ──── -->
