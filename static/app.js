@@ -262,6 +262,12 @@ const historyList = document.getElementById("history-list");
 const historyCount = document.getElementById("history-count");
 const historyEmpty = document.getElementById("history-empty");
 
+// History Modal elements
+const btnHistory = document.getElementById("btn-history");
+const historyPanel = document.getElementById("history-panel");
+const historyClose = document.getElementById("history-close");
+const historyBackdrop = document.getElementById("history-backdrop");
+
 function showClipboardSummary() {
     if (clipboardTextarea.value.trim().length > 0) {
         clipboardSummary.classList.remove("hidden");
@@ -278,6 +284,27 @@ clipboardSummary.addEventListener("click", () => {
     showClipboardEditor();
     clipboardTextarea.focus();
 });
+
+if (btnHistory) {
+    btnHistory.addEventListener("click", () => {
+        historyPanel.classList.add("active");
+        historyBackdrop.classList.add("active");
+    });
+}
+
+if (historyClose) {
+    historyClose.addEventListener("click", () => {
+        historyPanel.classList.remove("active");
+        historyBackdrop.classList.remove("active");
+    });
+}
+
+if (historyBackdrop) {
+    historyBackdrop.addEventListener("click", () => {
+        historyPanel.classList.remove("active");
+        historyBackdrop.classList.remove("active");
+    });
+}
 
 /**
  * Copy text to the device's clipboard.
@@ -429,10 +456,12 @@ function renderClipboardHistory(history) {
             copyToDeviceClipboard(entry.text);
         });
 
-        // Click the item itself → fill the textarea
+        // Click the item itself → fill the textarea & close history modal
         item.addEventListener("click", () => {
             clipboardTextarea.value = entry.text;
             showClipboardEditor();
+            if (historyPanel) historyPanel.classList.remove("active");
+            if (historyBackdrop) historyBackdrop.classList.remove("active");
         });
 
         fragment.appendChild(item);
