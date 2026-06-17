@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="OmniShare — Cross-device clipboard sync and file sharing on your local network.">
+    <title>OmniShare</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+    <!-- ═══════════════ PIN Login Modal ═══════════════ -->
+    <div id="auth-modal" class="modal-overlay">
+        <div class="modal-card glass-card">
+            <div class="modal-icon">⚡</div>
+            <h1 class="modal-title">OmniShare</h1>
+            <p class="modal-subtitle">Enter the 4-digit PIN displayed on the host PC</p>
+            <div class="pin-inputs" id="pin-inputs">
+                <input type="tel" maxlength="1" class="pin-digit" data-index="0" autocomplete="off" inputmode="numeric" pattern="[0-9]*">
+                <input type="tel" maxlength="1" class="pin-digit" data-index="1" autocomplete="off" inputmode="numeric" pattern="[0-9]*">
+                <input type="tel" maxlength="1" class="pin-digit" data-index="2" autocomplete="off" inputmode="numeric" pattern="[0-9]*">
+                <input type="tel" maxlength="1" class="pin-digit" data-index="3" autocomplete="off" inputmode="numeric" pattern="[0-9]*">
+            </div>
+            <p id="auth-error" class="auth-error"></p>
+            <button id="auth-submit" class="btn btn-primary btn-glow">Connect</button>
+        </div>
+    </div>
+
+    <!-- ═══════════════ Main Application ═══════════════ -->
+    <div id="app" class="app hidden">
+
+        <!-- Header -->
+        <header class="header" id="app-header">
+            <div class="header-left">
+                <h1 class="logo">
+                    <span class="logo-icon">⚡</span>
+                    <span class="logo-text">OmniShare</span>
+                </h1>
+            </div>
+            <div class="header-center">
+                <div class="connection-status" id="connection-status">
+                    <span class="status-dot"></span>
+                    <span class="status-text">Connecting…</span>
+                </div>
+            </div>
+            <div class="header-right">
+                <button class="btn-icon-only" id="btn-toggle-qr" title="Show QR code for pairing">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="3" height="3"/><line x1="21" y1="14" x2="21" y2="14.01"/><line x1="21" y1="21" x2="21" y2="21.01"/><line x1="17" y1="21" x2="17" y2="21.01"/><line x1="21" y1="17" x2="21" y2="17.01"/></svg>
+                </button>
+                <div class="network-badge glass-pill" id="network-badge">
+                    <span class="network-icon">🌐</span>
+                    <span class="network-url" id="network-url">…</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content Grid -->
+        <main class="main-grid">
+
+            <!-- ──── Clipboard Section ──── -->
+            <section class="section glass-card" id="clipboard-section">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <svg class="section-svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>
+                        Clipboard Sync
+                    </h2>
+                </div>
+
+                <div class="clipboard-input-group">
+                    <div id="clipboard-summary" class="clipboard-summary hidden">
+                        <div class="summary-icon">📝</div>
+                        <div class="summary-text">Clipboard contains text. Tap to view/edit.</div>
+                    </div>
+                    <div id="clipboard-editor" class="clipboard-editor">
+                        <textarea
+                            id="clipboard-text"
+                            class="clipboard-textarea"
+                            placeholder="Type or paste text here to sync across all your devices…"
+                            rows="4"
+                            spellcheck="false"
+                        ></textarea>
+                        <div class="clipboard-actions">
+                            <button id="btn-copy" class="btn btn-secondary" title="Copy current text to this device's clipboard">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                                Copy to Clipboard
+                            </button>
+                            <button id="btn-send" class="btn btn-primary" title="Send text to all connected devices and PC clipboard">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                                Send to Devices
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="clipboard-history">
+                    <h3 class="subsection-title">
+                        History
+                        <span class="badge" id="history-count">0</span>
+                    </h3>
+                    <div class="history-list" id="history-list">
+                        <div class="history-empty" id="history-empty">
+                            <p>No clipboard history yet</p>
+                            <p class="history-empty-sub">Copy text on any device to get started</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ──── Files Section ──── -->
+            <section class="section glass-card" id="files-section">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <svg class="section-svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+                        File Sharing
+                    </h2>
+                    <div class="storage-info" id="storage-info">
+                        <span id="storage-used">0 B</span> used
+                    </div>
+                </div>
+
+                <!-- Drop Zone -->
+                <div class="dropzone" id="dropzone">
+                    <div class="dropzone-content">
+                        <div class="dropzone-icon">
+                            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                        </div>
+                        <p class="dropzone-text">Drag &amp; drop files here</p>
+                        <p class="dropzone-subtext">or tap to browse · Max 500 MB per file</p>
+                    </div>
+                    <input type="file" id="file-input" multiple hidden>
+                </div>
+
+                <!-- Upload Progress -->
+                <div class="progress-bar" id="upload-progress">
+                    <div class="progress-fill" id="upload-progress-fill"></div>
+                    <span class="progress-text" id="upload-progress-text">0%</span>
+                </div>
+
+                <!-- File List -->
+                <div class="file-list" id="file-list">
+                    <div class="file-empty" id="file-empty">
+                        <p>No files uploaded yet</p>
+                    </div>
+                </div>
+
+                <!-- Footer -->
+                <div class="file-footer">
+                    <p class="auto-cleanup-notice">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                        Files are automatically removed after 24 hours
+                    </p>
+                    <button id="btn-clear-all" class="btn btn-danger" title="Delete all uploaded files">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                        Clear All Files
+                    </button>
+                </div>
+            </section>
+        </main>
+
+        <!-- ──── QR Code Panel (toggleable) ──── -->
+        <aside class="qr-panel glass-card" id="qr-panel">
+            <button class="qr-close" id="qr-close" title="Close">&times;</button>
+            <h3 class="qr-title">Quick Connect</h3>
+            <p class="qr-subtitle">Scan with your phone camera to open OmniShare</p>
+            <div class="qr-image-wrapper">
+                <img id="qr-image" src="" alt="QR Code" class="qr-image">
+            </div>
+            <p class="qr-url" id="qr-url"></p>
+            <p class="qr-pin" id="qr-pin"></p>
+        </aside>
+        <div class="qr-backdrop" id="qr-backdrop"></div>
+    </div>
+
+    <!-- ──── Toast Container ──── -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <script src="/app.js"></script>
+</body>
+</html>

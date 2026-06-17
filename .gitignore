@@ -1,0 +1,16 @@
+# Python environment
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+
+# OmniShare auto-generated & local data
+certs/
+uploads/
+pin.txt
+
+# OS generated files
+.DS_Store
+Thumbs.db
